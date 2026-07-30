@@ -1088,71 +1088,21 @@ a:hover {
     height: 100%;
 }
 
-/* Make all sections sit above the stars */
-section, footer, .navbar, .mobile-menu {
-    position: relative;
-    z-index: 1;
-}
-
-/* Slight background transparency on sections to let stars peek through */
-.section {
+/* Hero section: stars visible behind content with dark gradient overlay */
+.hero {
     background: transparent;
 }
 
-.section::before {
+.hero::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 0;
+    background: linear-gradient(180deg, rgba(10, 14, 26, 0.7) 0%, rgba(10, 14, 26, 0.5) 40%, rgba(10, 14, 26, 0.7) 100%);
     pointer-events: none;
+    z-index: 0;
 }
 
-.about {
-    position: relative;
-}
-
-.about::before {
-    background: linear-gradient(180deg, rgba(10, 14, 26, 0.85) 0%, rgba(15, 22, 41, 0.9) 50%, rgba(10, 14, 26, 0.85) 100%);
-}
-
-.skills {
-    position: relative;
-}
-
-.skills::before {
-    background: linear-gradient(180deg, rgba(10, 14, 26, 0.9) 0%, rgba(8, 12, 22, 0.92) 50%, rgba(10, 14, 26, 0.9) 100%);
-}
-
-.certifications {
-    position: relative;
-}
-
-.certifications::before {
-    background: linear-gradient(180deg, rgba(15, 22, 41, 0.85) 0%, rgba(10, 14, 26, 0.9) 50%, rgba(15, 22, 41, 0.85) 100%);
-}
-
-.projects {
-    position: relative;
-}
-
-.projects::before {
-    background: linear-gradient(180deg, rgba(10, 14, 26, 0.9) 0%, rgba(12, 18, 35, 0.92) 50%, rgba(10, 14, 26, 0.9) 100%);
-}
-
-.contact {
-    position: relative;
-}
-
-.contact::before {
-    background: linear-gradient(180deg, rgba(15, 22, 41, 0.88) 0%, rgba(10, 14, 26, 0.92) 50%, rgba(15, 22, 41, 0.88) 100%);
-}
-
-/* Section content sits above the overlay */
-.section .container,
-.footer .container {
-    position: relative;
-    z-index: 1;
-}
+/* Keep all other sections with their original dark backgrounds */
