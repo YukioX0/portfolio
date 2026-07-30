@@ -162,87 +162,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1400);
     }
 
-    // ---- Particles / floating dots background ----
-    const heroSection = document.querySelector('.hero');
-    if (heroSection) {
-        const canvas = document.createElement('canvas');
-        canvas.style.position = 'absolute';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.pointerEvents = 'none';
-        canvas.style.zIndex = '0';
-        heroSection.appendChild(canvas);
+    // ============================================
+    // PARALLAX STARS BACKGROUND
+    // ============================================
+    const canvas = document.getElementById('stars-canvas');
+    if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let animFrameId;
+    const ctx = canvas.getContext('2d');
+    let starsLayers = [];
+    let scrollY = 0;
 
-        function resizeCanvas() {
-            canvas.width = heroSection.offsetWidth;
-            canvas.height = heroSection.offsetHeight;
-        }
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+    }
 
-        function createParticles() {
-            particles = [];
-            const count = Math.min(50, Math.floor(canvas.width * canvas.height / 25000));
-            for (let i = 0; i < count; i++) {
-                particles.push({
+    function createStars() {
+        starsLayers = [
+            // Layer 0: Small distant stars (slow parallax)
+            {
+                speed: 0.05,
+                count: Math.floor((canvas.width * canvas.height) / 3000),
+                color: 'rgba(200, 210, 255, ',
+                minRadius: 0.3,
+                maxRadius: 0.8
+            },
+            // Layer 1: Medium stars (medium parallax)
+            {
+                speed: 0.12,
+                count: Math.floor((canvas.width * canvas.height) / 5000),
+                color: 'rgba(150, 170, 255, ',
+                minRadius: 0.6,
+                maxRadius: 1.3
+            },
+            // Layer 2: Bright stars (fast parallax)
+            {
+                speed: 0.22,
+                count: Math.floor((canvas.width * canvas.height) / 8000),
+                color: 'rgba(100, 140, 255, ',
+                minRadius: 1.0,
+                maxRadius: 2.0
+            }
+        ];
+
+        starsLayers.forEach(layer => {
+            layer.stars = [];
+            for (let i = 0; i < layer.count; i++) {
+                layer.stars.push({
                     x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5 + 0.5,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    opacity: Math.random() * 0.4 + 0.1
+                    y: Math.random() * canvas.height * 1.5,
+                    radius: Math.random() * (layer.maxRadius - layer.minRadius) + layer.minRadius,
+                    opacity: Math.random() * 0.6 + 0.2,
+                    twinkleSpeed: Math.random() * 0.02 + 0.005,
+                    twinkleOffset: Math.random() * Math.PI * 2
                 });
             }
-        }
-
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(74, 158, 255, ${p.opacity})`;
-                ctx.fill();
-
-                p.x += p.vx;
-                p.y += p.vy;
-
-                if (p.x < 0) p.x = canvas.width;
-                if (p.x > canvas.width) p.x = 0;
-                if (p.y < 0) p.y = canvas.height;
-                if (p.y > canvas.height) p.y = 0;
-            });
-
-            // Draw connections
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 120) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(74, 158, 255, ${0.06 * (1 - dist / 120)})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            animFrameId = requestAnimationFrame(drawParticles);
-        }
-
-        resizeCanvas();
-        createParticles();
-        drawParticles();
-
-        window.addEventListener('resize', () => {
-            resizeCanvas();
-            createParticles();
         });
     }
+
+    function drawStars() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const time = Date.now() * 0.001;
+
+        starsLayers.forEach(layer => {
+            const parallaxOffset = scrollY * layer.speed;
+
+            layer.stars.forEach(star => {
+                // Calculate parallax position
+                let y = star.y - parallaxOffset;
+
+                // Wrap stars vertically
+                const totalHeight = canvas.height * 1.5;
+                y = ((y % totalHeight) + totalHeight) % totalHeight;
+
+                // Only draw if visible
+                if (y > -10 && y < window.innerHeight + 10) {
+                    // Twinkling effect
+                    const twinkle = Math.sin(time * star.twinkleSpeed * 10 + star.twinkleOffset) * 0.3 + 0.7;
+                    const alpha = star.opacity * twinkle;
+
+                    ctx.beginPath();
+                    ctx.arc(star.x, y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = layer.color + alpha + ')';
+                    ctx.fill();
+
+                    // Glow effect for brighter stars
+                    if (star.radius > 1.2) {
+                        ctx.beginPath();
+                        ctx.arc(star.x, y, star.radius * 3, 0, Math.PI * 2);
+                        const gradient = ctx.createRadialGradient(
+                            star.x, y, 0,
+                            star.x, y, star.radius * 3
+                        );
+                        gradient.addColorStop(0, layer.color + (alpha * 0.3) + ')');
+                        gradient.addColorStop(1, layer.color + '0)');
+                        ctx.fillStyle = gradient;
+                        ctx.fill();
+                    }
+                }
+            });
+        });
+
+        requestAnimationFrame(drawStars);
+    }
+
+    // Track scroll position
+    window.addEventListener('scroll', () => {
+        scrollY = window.scrollY;
+    }, { passive: true });
+
+    resizeCanvas();
+    createStars();
+    drawStars();
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        createStars();
+    });
 });
